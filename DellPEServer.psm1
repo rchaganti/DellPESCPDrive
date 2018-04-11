@@ -136,6 +136,11 @@ function Connect-PEServer
         if (Test-Path -Path $JsonPath)
         {
             $json = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
+            if ($json -and (-not ($json.SystemConfiguration.ServiceTag)))
+            {
+                $serviceTag = (-join ((48..57) + (97..122) | Get-Random -Count 7 | % {[char]$_})).ToUpper()
+                $json.SystemConfiguration | Add-Member -MemberType NoteProperty -Name ServiceTag -Value $serviceTag
+            }
         }
         else
         {
@@ -146,6 +151,8 @@ function Connect-PEServer
     {
         $json = Get-PEServerSCP -DRACIPAddress $DRACIPAddress -DRACCredential $DRACCredential
 
+        $serviceTag = $json.SystemConfiguration.ServiceTag
+
         $json | Add-Member -MemberType NoteProperty 'DRACIPAddress' -Value $DRACIPAddress
         $json | Add-Member -MemberType NoteProperty 'UserName' -Value $DRACCredential.UserName
         $json | Add-Member -MemberType NoteProperty 'Password' -Value $DRACCredential.GetNetworkCredential().Password
@@ -154,10 +161,12 @@ function Connect-PEServer
         $json | Add-Member -MemberType NoteProperty 'FirmwareInventory' -Value $firmwareInventory
     }
 
-    if (-not (Get-PEServer -ServiceTag $json.SystemConfiguration.ServiceTag))
+    if (-not (Get-PEServer -ServiceTag $serviceTag))
     {
         [DellPEServerRoot]::availableServers += $json
     }
+
+    return $serviceTag
 }
 
 function Get-ComponentAttribute

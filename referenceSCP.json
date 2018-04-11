@@ -1,0 +1,251 @@
+{
+  "SystemConfiguration": {
+    "Comments": [
+      {
+        "Comment": "SCP baseline for R740xd and R640 Storage Spaces Direct Ready Nodes"
+      },
+      {
+        "Comment": "Version 1.0.0.0"
+      }
+    ],
+    "Components": [
+      {
+        "FQDD": "iDRAC.Embedded.1",
+        "Attributes": [
+          {
+            "Name": "NIC.1#Enable",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "NIC.1#Selection",
+            "Value": "Dedicated",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          }
+        ]
+      },
+      {
+        "FQDD": "System.Embedded.1",
+        "Attributes": [
+          {
+            "Name": "ServerPwr.1#PSRedPolicy",
+            "Value": "A/B Grid Redundant",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ServerPwr.1#PSPFCEnabled",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ServerPwr.1#PSRapidOn",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ServerPwr.1#RapidOnPrimaryPSU",
+            "Value": "PSU1",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          }
+        ]
+      },
+      {
+        "FQDD": "BIOS.Setup.1-1",
+        "Attributes": [
+          {
+            "Name": "NodeInterleave",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "LogicalProc",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcVirtualization",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "DcuStreamerPrefetcher",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "DcuIpPrefetcher",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SubNumaCluster",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "UpiPrefetch",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcX2Apic",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ControlledTurbo",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "EmbSata",
+            "Value": "AhciMode",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SecurityFreezeLock",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "WriteCache",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "NvmeMode",
+            "Value": "NonRaid",
+            "Set On Import": "False",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "BootMode",
+            "Value": "Uefi",
+            "Set On Import": "False",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "BootSeqRetry",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SriovGlobalEnable",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SysProfile",
+            "Value": "Custom",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcPwrPerf",
+            "Value": "MaxPerf",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "MemFrequency",
+            "Value": "MaxPerf",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcTurboMode",
+            "Value": "Enabled",
+            "Set On Import": "False",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcC1E",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "ProcCStates",
+            "Value": "Disabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "MemPatrolScrub",
+            "Value": "Standard",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "TpmSecurity",
+            "Value": "On",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "Tpm2Hierarchy",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "IntelTxt",
+            "Value": "Off",
+            "Set On Import": "False",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SecureBoot",
+            "Value": "Enabled",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SecureBootPolicy",
+            "Value": "Standard",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "SecureBootMode",
+            "Value": "DeployedMode",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "AcPwrRcvry",
+            "Value": "On",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          },
+          {
+            "Name": "AcPwrRcvryDelay",
+            "Value": "Random",
+            "Set On Import": "True",
+            "Comment": "Read and Write"
+          }
+        ]
+      }
+    ]
+  }
+}
