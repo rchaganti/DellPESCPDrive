@@ -1,5 +1,7 @@
 using namespace Microsoft.PowerShell.SHiPS
 
+Import-Module "$PSScriptRoot\DellPEServer.psm1" -Force
+
 [SHiPSProvider()]
 class DellPEServerRoot : SHiPSDirectory
 {
@@ -17,7 +19,18 @@ class DellPEServerRoot : SHiPSDirectory
         if ([DellPEServerRoot]::availableServers)
         {
             [DellPEServerRoot]::availableServers | ForEach-Object {
-                $obj += [DellPEServer]::new($_.SystemConfiguration.ServiceTag, $_)
+                if ($_.DRACIPAddress)
+                {
+                    $DRACIPAddress = $_.DRACIPAddress
+                    $secpasswd = ConvertTo-SecureString $_.Password -AsPlainText -Force
+                    $DRACCredential = New-Object System.Management.Automation.PSCredential ($_.UserName, $secpasswd)
+                }
+                else
+                {
+                    $DRACIPAddress = $null
+                    $DRACCredential = $null
+                }
+                $obj += [DellPEServer]::new($_.SystemConfiguration.ServiceTag, $_, $DRACIPAddress, $DRACCredential)
             }
         }
         return $obj
@@ -28,37 +41,98 @@ class DellPEServerRoot : SHiPSDirectory
 class DellPEServer : SHiPSDirectory
 {
     hidden [object] $serverCP
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
     [string] $Model 
     [string] $Type  = 'Server'
 
     #Default contructor
-    DellPEServer([string]$name, [object]$serverCP) : base($name)
+    DellPEServer([string]$name, [object]$serverCP, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
     {
         $this.serverCP = $serverCP
         $this.Model = $serverCP.SystemConfiguration.Model
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
     }   
 
     [Object[]] GetChildItem()
     {
         $obj = @()
-        foreach ($FQDD in $this.serverCP.SystemConfiguration.Components.FQDD)
+        $obj += [DellPEServerConfiguration]::new('SystemConfiguration', $this.serverCP, $this.DRACIPAddress, $this.DRACCredential)
+        if ($this.serverCP.FirmwareInventory)
         {
-            $obj += [DellPEServerComponent]::new($FQDD, $this.serverCP)
+            $obj += [DellPEFirmwareInventory]::new('FirmwareInventory', $this.serverCP, $this.DRACIPAddress, $this.DRACCredential)
         }
         return $obj
     }    
 }
 
 [SHiPSProvider()]
+class DellPEServerConfiguration : SHiPSDirectory
+{
+    hidden [object] $serverCP
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
+
+    #Default Constructor
+    DellPEServerConfiguration([string] $name, [object]$serverCP, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
+    {
+        $this.serverCP = $serverCP
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
+    }
+
+    [Object[]] GetChildItem()
+    {
+        $obj = @()
+        foreach ($FQDD in $this.serverCP.SystemConfiguration.Components.FQDD)
+        {
+            $obj += [DellPEServerComponent]::new($FQDD, $this.serverCP, $this.DRACIPAddress, $this.DRACCredential)
+        }
+        return $obj
+    }
+}
+
+[SHiPSProvider()]
+class DellPEFirmwareInventory : SHiPSDirectory
+{
+    hidden [object] $serverCP
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
+
+    #Default Constructor
+    DellPEFirmwareInventory([string] $name, [object]$serverCP, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
+    {
+        $this.serverCP = $serverCP
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
+    }
+
+    [Object[]] GetChildItem()
+    {
+        $obj = @()
+        foreach ($object in $this.serverCP.FirmwareInventory)
+        {
+            $obj += [DellPEServerFirmwareInventoryInformation]::new($object.Name, $object, $this.DRACIPAddress, $this.DRACCredential) 
+        }
+        return $obj
+    }
+}
+
+[SHiPSProvider()]
 class DellPEServerComponent : SHiPSDirectory
 {
     hidden [Object] $serverCP
-    [String] $type = 'Component' 
+    [String] $type = 'Component'
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
 
     #Default contructor
-    DellPEServerComponent([string]$name, [object]$serverCP) : base($name)
+    DellPEServerComponent([string]$name, [object]$serverCP, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
     {
         $this.serverCP   = $serverCP
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
     }
 
     [Object[]] GetChildItem()
@@ -68,165 +142,58 @@ class DellPEServerComponent : SHiPSDirectory
 
         foreach($attribute in $attributes)
         {
-            $obj += [DellPEServerComponentAttribute]::new($attribute.Name, $attribute)
+            $obj += [DellPEServerComponentAttribute]::new($attribute.Name, $attribute, $this.DRACIPAddress, $this.DRACCredential)
         }
         return $obj
     }  
 }
 
 [SHiPSProvider()]
-class DellPEServerComponentAttribute : SHiPSDirectory
+class DellPEServerComponentAttribute : SHiPSLeaf
 {
     hidden [Object] $attributeData
     [string] $Value
     [bool] $SetOnImport
     [string] $comment
-    [String] $type = 'Attribute' 
+    [String] $type = 'Attribute'
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
 
     #Default contructor
-    DellPEServerComponentAttribute([string]$name, [object]$attributeData) : base($name)
+    DellPEServerComponentAttribute([string]$name, [object]$attributeData, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
     {
         $this.attributeData   = $attributeData
         $this.Value      = $attributeData.Value
         $this.SetOnImport = $attributeData.'Set On Import'
-        $this.Comment = $attributeData.Comment`
+        $this.Comment = $attributeData.Comment
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
     }
 }
 
-#region support functions
-function Get-PEServer
+[SHiPSProvider()]
+class DellPEServerFirmwareInventoryInformation : SHiPSLeaf
 {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]
-        $ServiceTag
-    )
+    hidden [Object] $InventoryData
+    [string] $State
+    [bool] $Updateable
+    [string] $Health
+    [string] $Version
+    [String] $InstallState
+    hidden [string] $DRACIPAddress
+    hidden [pscredential] $DRACCredential
 
-    [DellPEServerRoot]::availableServers | Where-Object {$_.SystemConfiguration.ServiceTag -eq $ServiceTag}
-}
-
-function Connect-PEServer
-{
-    [CmdletBinding()]
-    param 
-    (
-        [Parameter()]
-        [String]
-        $JsonPath,
-
-        [Parameter()]
-        [String]
-        $DRACIPAddress,
-
-        [Parameter()]
-        [pscredential]
-        $DRACCredential
-    )
-
-    if ($JsonPath)
+    #Default contructor
+    DellPEServerFirmwareInventoryInformation([string]$name, [object]$InventoryData, [string]$DRACIPAddress, [psCredential]$DRACCredential) : base($name)
     {
-        if (Test-Path -Path $JsonPath)
-        {
-            $json = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
-        }
-        else
-        {
-            throw "$JsonPath not found."
-        }
-    }
-    else
-    {
-        $json = Get-PEServerSCP -DRACIPAddress $DRACIPAddress -DRACCredential $DRACCredential        
-    }
-
-    if (-not (Get-PEServer -ServiceTag $json.SystemConfiguration.ServiceTag))
-    {
-        [DellPEServerRoot]::availableServers += $json
+        $this.InventoryData   = $InventoryData
+        $this.State      = $InventoryData.State
+        $this.Updateable = $InventoryData.Updateable
+        $this.Health = $InventoryData.Health
+        $this.Version = $InventoryData.Version
+        $this.InstallState = $inventoryData.InstallState
+        $this.DRACIPAddress = $DRACIPAddress
+        $this.DRACCredential = $DRACCredential
     }
 }
 
-function Get-ComponentAttribute
-{
-    [CmdletBinding()]
-    param 
-    (
-        [Parameter(Mandatory = $true)]
-        [Object]
-        $serverCP,
-
-        [Parameter(Mandatory = $true)]
-        [String]
-        $ComponentFQDD
-    )
-
-    $attributeObject = $serverCP.SystemConfiguration.Components.Where({$_.FQDD -eq $ComponentFQDD}).Attributes
-    return $attributeObject
-}
-
-Function Get-PEServerSCP
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $true)]
-        [String]
-        $DRACIPAddress,
-
-        [Parameter(Mandatory = $true)]
-        [pscredential]
-        $DRACCredential
-    )
-
-add-type @'
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-public class TrustAllCertsPolicy : ICertificatePolicy {
-public bool CheckValidationResult(
-    ServicePoint srvPoint, X509Certificate certificate,
-    WebRequest request, int certificateProblem) {
-        return true;
-    }
-}
-'@
-    if (([System.Net.ServicePointManager]::CertificatePolicy).ToString() -ne 'TrustAllCertsPolicy')
-    {
-        [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy -ErrorAction Stop
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
-    }
-
-    $headerObject = @{
-        'ExportFormat'    = 'JSON'
-        'ShareParameters' = @{'Target'='All'}
-    }
-
-    $headerJson = $headerObject | ConvertTo-Json
-
-    $url = "https://$DRACIPAddress/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration"
-    $response = Invoke-WebRequest -Uri $url -Credential $DRACCredential -Method Post -Body $headerJson -ContentType 'application/json' -ErrorVariable scpError
-
-    $responseJson = $response.RawContent | ConvertTo-Json
-    $jobID = ([regex]::Match($responseJson,'JID_.+?r').captures.groups[0].value).replace('\r','')
-
-    $url = "https://$DRACIPAddress/redfish/v1/TaskService/Tasks/$jobID"
-    $response = Invoke-WebRequest -Uri $url -Credential $DRACCredential -Method Get -UseBasicParsing -ContentType 'application/json'
-
-    $responseObject = $response.Content | ConvertFrom-Json
-
-    While($responseObject.TaskState -eq 'Running')
-    {
-        Start-Sleep -Seconds 5
-        $response = Invoke-WebRequest -Uri $url -Credential $DRACCredential -Method Get -UseBasicParsing -ContentType 'application/json'
-        $responseObject = $response.Content | ConvertFrom-Json
-    }
-
-    if ($response.StatusCode -eq 200 -and ($response.RawContent.Contains('SystemConfiguration')))
-    {
-        return ($response.Content | ConvertFrom-Json)
-    }
-    else
-    {
-        throw 'Error in exporting SCP'
-    }
-}
-
-#endregion
