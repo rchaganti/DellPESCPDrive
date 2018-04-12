@@ -52,13 +52,3 @@ foreach ($component in $componentsToValidate)
     }
 }
 
-$credential = Get-Credential
-
-$testHash = @{
-    Path =  'D:\Github\DellPESCPDrive\Tests\DellPESCPDrive.Sample.Tests.ps1'
-    Parameters = @{
-        referenceJsonPath = 'D:\gitHub\DellPESCPDrive\referenceSCP.json'
-        DRACCredential    = $credential
-        DRACIPAddress     = @('172.16.100.23','172.16.100.24')
-    }
-}
