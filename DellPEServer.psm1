@@ -136,7 +136,8 @@ function Connect-PEServer
         if (Test-Path -Path $JsonPath)
         {
             $json = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
-            if ($json -and (-not ($json.SystemConfiguration.ServiceTag)))
+            $serviceTag = $json.SystemConfiguration.ServiceTag
+            if ($json -and (-not $serviceTag))
             {
                 $serviceTag = (-join ((48..57) + (97..122) | Get-Random -Count 7 | % {[char]$_})).ToUpper()
                 $json.SystemConfiguration | Add-Member -MemberType NoteProperty -Name ServiceTag -Value $serviceTag
